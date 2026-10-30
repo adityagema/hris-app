@@ -1,0 +1,1065 @@
+<!-- ======================================================================
+  SMART HRIS & PAYROLL - Index.html
+  Shell aplikasi (dipanggil doGet). Memuat Styles + Scripts, lalu SPA router
+  mengisi #view dengan fragment halaman sesuai role (Login / Dashboard / modul).
+======================================================================= -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Smart HRIS &amp; Payroll Management System</title>
+  <!-- ======================================================================
+  SMART HRIS & PAYROLL - Styles.html
+  Design system: SaaS Dashboard (Navy Blue, White, Soft Gray, Emerald accent)
+  Load: Bootstrap 5 + Bootstrap Icons + Google Fonts (Plus Jakarta Sans)
+======================================================================= -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<style>
+/* ========== 1. DESIGN TOKENS ========== */
+:root {
+  --navy: #0f2a4a; --navy-700: #16385f; --navy-600: #1d4370; --navy-100: #e7eef7;
+  --emerald: #10b981; --emerald-600: #059669; --emerald-50: #ecfdf5;
+  --red: #ef4444; --red-50: #fef2f2; --amber: #f59e0b; --amber-50: #fffbeb;
+  --blue: #3b82f6; --blue-50: #eff6ff; --violet: #8b5cf6; --violet-50: #f5f3ff;
+  --bg: #f1f5f9; --surface: #ffffff; --surface-2: #f8fafc;
+  --text: #1e293b; --text-2: #64748b; --border: #e2e8f0;
+  --radius: 14px; --radius-sm: 10px;
+  --sidebar-w: 264px; --topbar-h: 64px;
+  --shadow: 0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,42,74,.07);
+  --shadow-lg: 0 10px 40px rgba(15,42,74,.16);
+}
+[data-theme="dark"] {
+  --bg: #0b1524; --surface: #10203a; --surface-2: #0d1a2e;
+  --text: #e2e8f0; --text-2: #8ea3bd; --border: #1d3355;
+  --navy: #13294a; --navy-100: #1c3355;
+  --emerald-50: #0c2b22; --blue-50: #14263f; --red-50: #2b1414; --amber-50: #2b2114; --violet-50: #1f1a33;
+  --shadow: 0 1px 3px rgba(0,0,0,.35); --shadow-lg: 0 10px 40px rgba(0,0,0,.5);
+}
+* { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+body { background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+a { text-decoration: none; color: var(--emerald-600); }
+
+/* ========== 2. LAYOUT: SIDEBAR + TOPBAR ========== */
+#sidebar {
+  position: fixed; inset: 0 auto 0 0; width: var(--sidebar-w); z-index: 1040;
+  background: linear-gradient(180deg, var(--navy) 0%, #0b1f38 100%);
+  color: #cbd5e1; display: flex; flex-direction: column; transition: transform .25s ease;
+}
+[data-theme="dark"] #sidebar { background: linear-gradient(180deg, #0d1f3a 0%, #081320 100%); }
+.sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 18px 20px; color: #fff; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sidebar-brand .logo-badge { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--emerald), #34d399); display: grid; place-items: center; color: #063e2e; font-size: 20px; }
+.sidebar-brand h6 { margin: 0; font-weight: 800; line-height: 1.15; }
+.sidebar-brand small { font-size: 10px; color: #7d95b5; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 12px 20px; }
+.sidebar-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #5d7495; margin: 14px 10px 6px; font-weight: 700; }
+.sidebar-link {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+  color: #b6c6dc; font-weight: 600; font-size: 13.5px; margin-bottom: 2px; cursor: pointer; border: 0; background: none; width: 100%; text-align: left;
+}
+.sidebar-link i { font-size: 17px; width: 22px; text-align: center; }
+.sidebar-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+.sidebar-link.active { background: var(--emerald); color: #052e22; }
+.sidebar-link.active i { color: #052e22; }
+.sidebar-link .menu-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 20px; padding: 1px 7px; }
+.sidebar-foot { padding: 14px 18px; font-size: 10.5px; color: #5d7495; border-top: 1px solid rgba(255,255,255,.08); }
+
+.main-wrap { margin-left: var(--sidebar-w); min-height: 100vh; transition: margin .25s; }
+#topbar {
+  height: var(--topbar-h); background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; padding: 0 20px; position: sticky; top: 0; z-index: 1030;
+}
+.topbar-title { font-weight: 800; font-size: 16px; margin: 0; }
+.topbar-sub { font-size: 11px; color: var(--text-2); }
+.icon-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); display: grid; place-items: center; position: relative; cursor: pointer; }
+.icon-btn:hover { background: var(--navy-100); }
+.icon-btn .dot { position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); border: 2px solid var(--surface); }
+#burger { display: none; }
+@media (max-width: 991.98px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .main-wrap { margin-left: 0; }
+  #burger { display: grid; }
+  #sidebar-backdrop.show { position: fixed; inset: 0; background: rgba(2,8,20,.55); z-index: 1035; }
+}
+.user-chip { display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid var(--border); border-radius: 12px; padding: 5px 12px 5px 6px; background: var(--surface-2); }
+.user-chip:hover { background: var(--navy-100); }
+.avatar { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--navy), var(--navy-600)); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12.5px; }
+.avatar.em { background: linear-gradient(135deg, var(--emerald), #34d399); color: #052e22; }
+
+/* ========== 3. KOMPONEN UMUM ========== */
+.card-soft { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-soft .card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.card-soft .card-head h6 { margin: 0; font-weight: 800; font-size: 14.5px; }
+.card-soft .card-head small { color: var(--text-2); }
+.card-body-soft { padding: 18px 20px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; height: 100%; }
+.kpi-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; flex-shrink: 0; }
+.kpi-card .kpi-label { font-size: 11.5px; color: var(--text-2); font-weight: 600; }
+.kpi-card .kpi-value { font-size: 21px; font-weight: 800; line-height: 1.2; }
+.kpi-card .kpi-sub { font-size: 10.5px; color: var(--text-2); }
+.bg-navy { background: var(--navy-100) !important; color: var(--navy) !important; }
+.bg-em { background: var(--emerald-50) !important; color: var(--emerald-600) !important; }
+.bg-red { background: var(--red-50) !important; color: var(--red) !important; }
+.bg-amber { background: var(--amber-50) !important; color: var(--amber) !important; }
+.bg-blue { background: var(--blue-50) !important; color: var(--blue) !important; }
+.bg-violet { background: var(--violet-50) !important; color: var(--violet) !important; }
+
+/* Tombol */
+.btn { border-radius: 10px; font-weight: 700; font-size: 13px; padding: 8px 16px; }
+.btn-emerald { background: var(--emerald); color: #052e22; border: 0; }
+.btn-emerald:hover { background: var(--emerald-600); color: #fff; }
+.btn-navy { background: var(--navy); color: #fff; border: 0; }
+.btn-navy:hover { background: var(--navy-600); color: #fff; }
+.btn-soft { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+.btn-soft:hover { background: var(--navy-100); }
+.btn-sm-2 { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+.btn:disabled { opacity: .55; }
+
+/* Badge status */
+.badge-soft { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+.st-HADIR, .st-APPROVED, .st-SENT, .st-PAID { background: var(--emerald-50); color: var(--emerald-600); }
+.st-TERLAMBAT, .st-PENDING, .st-WAITING_APPROVAL { background: var(--amber-50); color: #b45309; }
+.st-ALPHA, .st-REJECTED, .st-FAILED { background: var(--red-50); color: var(--red); }
+.st-IZIN, .st-CALCULATED { background: var(--blue-50); color: var(--blue); }
+.st-SAKIT { background: var(--violet-50); color: var(--violet); }
+.st-CUTI { background: var(--emerald-50); color: var(--emerald-600); }
+.st-LIBUR, .st-DRAFT { background: var(--gray-100, #f1f5f9); color: var(--text-2); }
+.st-LOCKED { background: #0f172a; color: #fff; }
+[data-theme="dark"] .st-LIBUR, [data-theme="dark"] .st-DRAFT { background: #1c3355; color: #8ea3bd; }
+.st-CANCELLED { background: var(--gray-100, #f1f5f9); color: var(--text-2); text-decoration: line-through; }
+
+/* Tabel */
+.table-soft { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.table-soft thead th { background: var(--surface-2); color: var(--text-2); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table-soft tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table-soft tbody tr:hover td { background: var(--surface-2); }
+.table-soft tbody tr:last-child td { border-bottom: 0; }
+.table-wrap { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+/* Form */
+.form-control, .form-select { border-radius: 10px; border-color: var(--border); background: var(--surface); color: var(--text); font-size: 13.5px; padding: 8px 13px; }
+.form-control:focus, .form-select:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,.15); background: var(--surface); color: var(--text); }
+.form-label { font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 5px; }
+.form-text { font-size: 11px; }
+.input-group-text { background: var(--surface-2); border-color: var(--border); color: var(--text-2); border-radius: 10px; }
+
+/* Tabs kustom */
+.nav-tabs-soft { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.nav-tabs-soft button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-weight: 700; font-size: 13px; border-radius: 10px; padding: 8px 16px; display: flex; align-items: center; gap: 7px; }
+.nav-tabs-soft button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.nav-tabs-soft button:hover:not(.active) { background: var(--navy-100); }
+
+/* ==== Switch ON/OFF Permission (Authority Matrix) ==== */
+.perm-pill {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-width: 158px; padding: 10px 12px 10px 16px;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface-2); color: var(--text-2);
+  font-size: 14.5px; font-weight: 700; line-height: 1;
+  cursor: pointer; user-select: none;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.perm-pill:hover { border-color: var(--emerald); }
+.perm-pill:focus-visible { outline: 2px solid var(--emerald); outline-offset: 2px; }
+.perm-pill .perm-track {
+  position: relative; flex: 0 0 auto; width: 46px; height: 25px;
+  border-radius: 999px; background: var(--border);
+  transition: background .16s ease;
+}
+.perm-pill .perm-track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 19px; height: 19px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  transition: transform .16s ease;
+}
+.perm-pill.on { background: var(--emerald-50); border-color: var(--emerald); color: var(--emerald-600); }
+.perm-pill.on .perm-track { background: var(--emerald); }
+.perm-pill.on .perm-track::after { transform: translateX(21px); }
+[data-theme="dark"] .perm-pill.on { color: #34d399; }
+[data-theme="dark"] .perm-pill .perm-track::after { background: #f1f5f9; }
+
+/* Authority Matrix: tab role & tabel diperbesar agar tidak ada ruang kosong */
+#am-root .nav-tabs-soft button { font-size: 15px; padding: 11px 22px; border-radius: 12px; }
+#am-root thead th { font-size: 13.5px; letter-spacing: .04em; }
+#am-root .am-mod-name { font-size: 15.5px; }
+#am-root .am-mod-key { font-size: 12.5px; }
+#am-root .am-locked { font-size: 14px; padding: 9px 16px; border-radius: 12px; }
+
+/* Toast */
+#toast-container { position: fixed; top: 18px; right: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+.toast-hris { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--emerald); border-radius: 12px; padding: 12px 16px; box-shadow: var(--shadow-lg); display: flex; gap: 10px; align-items: flex-start; animation: slideIn .25s ease; }
+.toast-hris.error { border-left-color: var(--red); }
+.toast-hris.warn { border-left-color: var(--amber); }
+.toast-hris i { font-size: 18px; margin-top: 1px; }
+.toast-hris .t-title { font-weight: 800; font-size: 13px; }
+.toast-hris .t-msg { font-size: 12.5px; color: var(--text-2); }
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Modal */
+.modal-backdrop-hris { position: fixed; inset: 0; background: rgba(2,8,20,.55); z-index: 1500; display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+.modal-hris { background: var(--surface); border-radius: 16px; width: 100%; max-width: 560px; box-shadow: var(--shadow-lg); animation: pop .18s ease; max-height: 92vh; display: flex; flex-direction: column; }
+.modal-hris.lg { max-width: 860px; }
+.modal-hris.sm { max-width: 420px; }
+@keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-hris .m-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-hris .m-head h6 { margin: 0; font-weight: 800; }
+.modal-hris .m-body { padding: 20px; overflow-y: auto; }
+.modal-hris .m-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Loading */
+#loading-overlay { position: fixed; inset: 0; background: rgba(11,21,36,.45); z-index: 1800; display: none; place-items: center; }
+#loading-overlay.show { display: grid; }
+.spinner-hris { width: 52px; height: 52px; border: 5px solid rgba(255,255,255,.25); border-top-color: var(--emerald); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: 8px; height: 14px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 42px 20px; color: var(--text-2); }
+.empty-state i { font-size: 44px; opacity: .35; }
+.empty-state h6 { font-weight: 800; color: var(--text); margin-top: 10px; }
+.empty-state p { font-size: 12.5px; margin-bottom: 0; }
+
+/* ========== 4. LOGIN ========== */
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: radial-gradient(1200px 500px at 70% -10%, rgba(16,185,129,.18), transparent), linear-gradient(160deg, var(--navy) 0%, #081627 70%); }
+.auth-card { width: 100%; max-width: 420px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.auth-head { background: linear-gradient(135deg, var(--navy), var(--navy-600)); color: #fff; padding: 30px 30px 26px; }
+.auth-head .logo-badge { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--emerald), #34d399); display: grid; place-items: center; color: #063e2e; font-size: 26px; margin-bottom: 14px; }
+.auth-body { padding: 28px 30px 30px; }
+.pass-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-2); }
+
+/* ========== 5. ABSENSI (KAMERA + GPS) ========== */
+.camera-box { position: relative; background: #06121f; border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; display: grid; place-items: center; }
+.camera-box video { width: 100%; height: 100%; object-fit: cover; }
+.camera-box .cam-off { color: #64748b; text-align: center; font-size: 12.5px; padding: 18px; }
+.camera-ring { position: absolute; inset: 12%; border: 2px dashed rgba(16,185,129,.65); border-radius: 50%; pointer-events: none; }
+.selfie-preview { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: var(--radius); }
+.gps-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.map-embed { width: 100%; height: 180px; border: 0; border-radius: var(--radius-sm); }
+.big-clock { font-size: 30px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+[data-theme="dark"] .big-clock { color: #fff; }
+.att-status-card { border-left: 5px solid var(--emerald); }
+
+/* ========== 6. KALENDER & LAINNYA ========== */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.cal-cell { min-height: 54px; border: 1px solid var(--border); border-radius: 8px; padding: 4px 6px; font-size: 11px; background: var(--surface-2); }
+.cal-cell .d { font-weight: 800; }
+.cal-cell.LIBUR { background: var(--surface); color: var(--text-2); }
+.cal-cell.HADIR { background: var(--emerald-50); border-color: var(--emerald); }
+.cal-cell.TERLAMBAT { background: var(--amber-50); border-color: var(--amber); }
+.cal-cell.IZIN, .cal-cell.CUTI { background: var(--blue-50); border-color: var(--blue); }
+.cal-cell.SAKIT { background: var(--violet-50); border-color: var(--violet); }
+.cal-cell.ALPHA { background: var(--red-50); border-color: var(--red); }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 5px; }
+.notif-item { display: flex; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.notif-item:hover { background: var(--surface-2); }
+.notif-item.unread { background: var(--emerald-50); }
+.notif-panel { position: fixed; top: calc(var(--topbar-h) + 8px); right: 16px; width: min(400px, calc(100vw - 24px)); max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); z-index: 1400; display: none; }
+.notif-panel.open { display: block; }
+.timeline { position: relative; padding-left: 22px; }
+.timeline::before { content: ''; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 2px; background: var(--border); }
+.timeline .tl-item { position: relative; padding-bottom: 14px; }
+.timeline .tl-item::before { content: ''; position: absolute; left: -22px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--emerald); border: 2.5px solid var(--surface); }
+.page-fade { animation: fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media print { #sidebar, #topbar, #toast-container, .no-print { display: none !important; } .main-wrap { margin: 0 !important; } }
+</style>
+
+  <style>
+    body.auth-mode #sidebar, body.auth-mode #topbar, body.auth-mode #notif-panel { display: none !important; }
+    body.auth-mode .main-wrap { margin-left: 0 !important; }
+  </style>
+  <!-- ============================================================
+    KONFIGURASI WAJIB - GANTI URL DI BAWAH INI
+    Isi dengan URL Web App Apps Script Anda (akhiran /exec).
+    Cara: editor Apps Script > Deploy > Manage deployments > salin URL.
+    ============================================================ -->
+  <script>window.HRIS_API_URL = "PASTE_URL_WEB_APP_DISINI";</script>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside id="sidebar"></aside>
+  <div id="sidebar-backdrop"></div>
+
+  <!-- Area utama -->
+  <div class="main-wrap">
+    <header id="topbar"></header>
+    <main id="view" class="p-3 p-lg-4"></main>
+  </div>
+
+  <!-- Panel notifikasi (slide-over dari topbar) -->
+  <div class="notif-panel" id="notif-panel"></div>
+
+  <!-- Overlay & kontainer global -->
+  <div id="loading-overlay"><div class="spinner-hris"></div></div>
+  <div id="toast-container"></div>
+  <div id="modal-root"></div>
+
+  <!-- ======================================================================
+  SMART HRIS & PAYROLL - Scripts.html
+  Mesin aplikasi: wrapper google.script.run (Promise), session token,
+  SPA router dengan fragment server-side, UI helpers (toast, modal, tabel,
+  format), kamera (MediaDevices), GPS (Geolocation), Chart.js registry,
+  dark mode, notifikasi polling.
+======================================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+'use strict';
+/* ================= 1. CORE / API WRAPPER ================= */
+var HRIS = { ctx: null, route: null, charts: {}, fragCache: {}, notifTimer: null };
+
+function gas(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      return reject(new Error('Google Apps Script runtime tidak tersedia. Buka aplikasi melalui URL Web App.'));
+    }
+    var runner = google.script.run
+      .withSuccessHandler(function (res) {
+        if (res && res.ok) resolve(res);
+        else reject(new Error(res && res.message ? res.message :
+          (res === null ? 'Server tidak mengembalikan data. Pastikan seluruh file backend versi terbaru sudah tersalin, lalu cek menu Eksekusi di editor Apps Script.' : 'Respon tidak valid dari server.')));
+      })
+      .withFailureHandler(function (e) { reject(new Error(e && e.message ? e.message : String(e))); });
+    if (typeof runner[fn] !== 'function') {
+      return reject(new Error('Fungsi server "' + fn + '" tidak ditemukan di Apps Script. File backend (.gs) yang memuatnya belum tersalin atau belum di-save. Salin ulang seluruh file .gs dari paket terbaru, SAVE (Ctrl+S), lalu Deploy > Manage deployments > ikon pensil > New version > Deploy, dan muat ulang halaman (Ctrl+Shift+R).'));
+    }
+    runner[fn].apply(null, args);
+  });
+}
+
+
+/* ================= 1b. TRANSPORT REMOTE (GitHub Pages / hosting eksternal) =================
+ * Di luar Apps Script tidak ada google.script.run. Semua panggilan gas()/api() dialihkan
+ * ke Web App Apps Script (window.HRIS_API_URL):
+ *   - POST JSON {api, args} -> JSON   (payload besar: foto absensi, PDF, dsb.)
+ *   - GET  JSONP (fallback otomatis untuk panggilan kecil bila POST terblokir)
+ * Keamanan tetap 100% di server: token + permission divalidasi tiap fungsi api*.
+ */
+(function () {
+  var BASE = window.HRIS_API_URL || '';
+  if (typeof google !== 'undefined' && google.script && google.script.run) return; // di dalam GAS: transport bawaan
+
+  gas = function (fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (!BASE || BASE.indexOf('PASTE_URL_WEB_APP_DISINI') > -1) {
+      return Promise.reject(new Error('URL server belum diatur. Buka file index.html di hosting Anda, isi window.HRIS_API_URL dengan URL Web App Apps Script (akhiran /exec), lalu simpan.'));
+    }
+    var payload = JSON.stringify({ api: fn, args: args });
+    return postJson(payload).then(null, function (e) {
+      if (e && e.__reply) throw e;
+      if (payload.length <= 1800) return jsonp(fn, args);
+      throw new Error('Gagal menghubungi server Apps Script (' + ((e && e.message) || e) + '). Periksa HRIS_API_URL di index.html, pastikan deployment "Who has access: Anyone", dan koneksi internet.');
+    });
+  };
+
+  function postJson(payload) {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var to = ctrl ? setTimeout(function () { ctrl.abort(); }, 60000) : null;
+    return fetch(BASE, { method: 'POST', redirect: 'follow', body: payload, signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (res) {
+        if (to) clearTimeout(to);
+        if (res && res.ok) return res;
+        var ex = new Error(res && res.message ? res.message : 'Respon tidak valid dari server.');
+        ex.__reply = true; // balasan server pasti - jangan dicoba ulang
+        throw ex;
+      })
+      .catch(function (e) {
+        if (to) clearTimeout(to);
+        if (e && e.__reply) throw e;
+        e.__transport = true;
+        throw e;
+      });
+  }
+
+  function jsonp(fn, args) {
+    return new Promise(function (resolve, reject) {
+      var cb = 'hrisCb' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+      var s = document.createElement('script');
+      var done = false;
+      var to = setTimeout(function () { finish(); reject(new Error('Server tidak merespons (timeout). Cek koneksi atau URL Web App.')); }, 45000);
+      function finish() {
+        if (done) return;
+        done = true; clearTimeout(to);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      }
+      window[cb] = function (res) {
+        finish();
+        if (res && res.ok) resolve(res);
+        else reject(new Error(res && res.message ? res.message : 'Respon tidak valid dari server.'));
+      };
+      s.onerror = function () { finish(); reject(new Error('Gagal menghubungi server Apps Script (JSONP). Periksa HRIS_API_URL di index.html.')); };
+      s.src = BASE + (BASE.indexOf('?') > -1 ? '&' : '?') + 'api=' + encodeURIComponent(fn) + '&callback=' + cb + '&args=' + encodeURIComponent(JSON.stringify(args));
+      document.body.appendChild(s);
+    });
+  }
+})();
+
+/** Panggil API: resolve(res.data). Error otomatis toast (kecuali silent). */
+async function api(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  var res = await gas.apply(null, [fn].concat(args));
+  return res.data;
+}
+
+async function tryApi(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  try { return await api.apply(null, [fn].concat(args)); }
+  catch (e) { toast(e.message, 'error'); throw e; }
+}
+
+function getToken() { return localStorage.getItem('hris_token') || ''; }
+function setToken(t) { localStorage.setItem('hris_token', t); }
+
+/* ================= 2. FORMAT & UI HELPERS ================= */
+function esc(s) {
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+var BULAN_ID3 = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+var HARI_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+function rupiah(n) {
+  n = Math.round(Number(n) || 0);
+  var neg = n < 0, s = Math.abs(n).toString(), out = '';
+  while (s.length > 3) { out = '.' + s.slice(-3) + out; s = s.slice(0, -3); }
+  return (neg ? '-Rp ' : 'Rp ') + s + out;
+}
+function dateID(d, short) { // '2026-01-05' -> '5 Januari 2026'
+  if (!d) return '-';
+  var p = String(d).substring(0, 10).split('-');
+  if (p.length !== 3) return String(d);
+  var b = short ? BULAN_ID3[Number(p[1]) - 1] : BULAN_ID[Number(p[1]) - 1];
+  return Number(p[2]) + ' ' + b + ' ' + p[0];
+}
+function dtID(s) {
+  if (!s) return '-';
+  var m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+  return m ? m[3] + ' ' + BULAN_ID3[Number(m[2]) - 1] + ' ' + m[1] + ', ' + m[4] + ':' + m[5] : String(s);
+}
+function hm(min) {
+  min = Math.round(Number(min) || 0);
+  return Math.floor(min / 60) + ' jam ' + (min % 60) + ' mnt';
+}
+var STATUS_LABEL = { HADIR:'Hadir', TERLAMBAT:'Terlambat', IZIN:'Izin', SAKIT:'Sakit', CUTI:'Cuti', ALPHA:'Alpha', LIBUR:'Libur',
+  PENDING:'Menunggu', APPROVED:'Disetujui', REJECTED:'Ditolak', CANCELLED:'Dibatalkan',
+  DRAFT:'Draft', CALCULATED:'Dihitung', WAITING_APPROVAL:'Menunggu Approval', PAID:'Dibayar', LOCKED:'Terkunci',
+  SENT:'Terkirim', FAILED:'Gagal' };
+function badge(st) {
+  var s = String(st || '-');
+  return '<span class="badge-soft st-' + esc(s) + '">' + esc(STATUS_LABEL[s] || s) + '</span>';
+}
+function emptyState(icon, title, msg) {
+  return '<div class="empty-state"><i class="bi ' + icon + '"></i><h6>' + esc(title) + '</h6><p>' + esc(msg || '') + '</p></div>';
+}
+function toast(msg, type, title) {
+  var wrap = document.getElementById('toast-container');
+  if (!wrap) return;
+  var el = document.createElement('div');
+  el.className = 'toast-hris ' + (type || '');
+  var icon = type === 'error' ? 'bi-x-circle-fill text-danger' : type === 'warn' ? 'bi-exclamation-triangle-fill text-warning' : 'bi-check-circle-fill';
+  el.innerHTML = '<i class="bi ' + icon + '"></i><div><div class="t-title">' + esc(title || (type === 'error' ? 'Gagal' : 'Berhasil')) + '</div><div class="t-msg">' + esc(msg) + '</div></div>';
+  wrap.appendChild(el);
+  setTimeout(function () { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function () { el.remove(); }, 320); }, 4200);
+}
+function loading(show) {
+  var el = document.getElementById('loading-overlay');
+  if (el) el.classList.toggle('show', !!show);
+}
+
+/* Modal generik */
+function openModal(opt) {
+  opt = opt || {};
+  var root = document.getElementById('modal-root');
+  var back = document.createElement('div');
+  back.className = 'modal-backdrop-hris';
+  back.innerHTML =
+    '<div class="modal-hris ' + (opt.size || '') + '">' +
+    '<div class="m-head"><h6>' + esc(opt.title || '') + '</h6>' +
+    '<button class="btn btn-sm btn-soft btn-sm-2 m-close"><i class="bi bi-x-lg"></i></button></div>' +
+    '<div class="m-body">' + (opt.body || '') + '</div>' +
+    (opt.footer ? '<div class="m-foot">' + opt.footer + '</div>' : '') +
+    '</div>';
+  root.appendChild(back);
+  function close() { back.remove(); }
+  back.querySelector('.m-close').onclick = close;
+  back.addEventListener('mousedown', function (e) { if (e.target === back) close(); });
+  if (opt.onMount) opt.onMount(back, close);
+  return { el: back, close: close };
+}
+function confirmDlg(title, msg, okLabel, danger) {
+  return new Promise(function (resolve) {
+    var m = openModal({
+      title: title, size: 'sm',
+      body: '<p style="margin:0;font-size:13.5px">' + msg + '</p>',
+      footer: '<button class="btn btn-soft" id="cf-no">Batal</button>' +
+        '<button class="btn ' + (danger ? 'btn-danger' : 'btn-emerald') + '" id="cf-yes">' + esc(okLabel || 'Ya, Lanjutkan') + '</button>'
+    });
+    m.el.querySelector('#cf-no').onclick = function () { m.close(); resolve(false); };
+    m.el.querySelector('#cf-yes').onclick = function () { m.close(); resolve(true); };
+  });
+}
+
+/* Tabel generik dengan pencarian & pagination klien */
+function renderTable(hostId, opt) {
+  var host = document.getElementById(hostId);
+  if (!host) return;
+  var state = { q: '', page: 1, per: opt.per || 10 };
+  function draw() {
+    var rows = opt.rows;
+    if (opt.searchable !== false && state.q) {
+      var q = state.q.toLowerCase();
+      rows = opt.rows.filter(function (r) { return JSON.stringify(r).toLowerCase().indexOf(q) > -1; });
+    }
+    var total = rows.length, pages = Math.max(1, Math.ceil(total / state.per));
+    if (state.page > pages) state.page = pages;
+    var slice = rows.slice((state.page - 1) * state.per, state.page * state.per);
+    var html = '<div class="table-wrap"><table class="table-soft"><thead><tr>';
+    opt.columns.forEach(function (c) { html += '<th style="' + (c.thStyle || '') + '">' + c.label + '</th>'; });
+    html += '</tr></thead><tbody>';
+    if (!slice.length) {
+      html += '<tr><td colspan="' + opt.columns.length + '">' + emptyState('bi-inbox', 'Tidak ada data', opt.emptyMsg || 'Belum ada data untuk ditampilkan.') + '</td></tr>';
+    } else {
+      slice.forEach(function (r) {
+        html += '<tr>';
+        opt.columns.forEach(function (c) { html += '<td class="' + (c.cls || '') + '">' + c.render(r) + '</td>'; });
+        html += '</tr>';
+      });
+    }
+    html += '</tbody></table></div>';
+    if (total > state.per) {
+      html += '<div class="d-flex justify-content-between align-items-center p-2 px-3" style="font-size:12px;color:var(--text-2)">' +
+        '<div>Menampilkan ' + ((state.page - 1) * state.per + 1) + '-' + Math.min(total, state.page * state.per) + ' dari ' + total + '</div>' +
+        '<div class="btn-group"><button class="btn btn-soft btn-sm-2" id="tp-prev" ' + (state.page <= 1 ? 'disabled' : '') + '><i class="bi bi-chevron-left"></i></button>' +
+        '<span class="btn btn-soft btn-sm-2" style="pointer-events:none">' + state.page + ' / ' + pages + '</span>' +
+        '<button class="btn btn-soft btn-sm-2" id="tp-next" ' + (state.page >= pages ? 'disabled' : '') + '><i class="bi bi-chevron-right"></i></button></div></div>';
+    }
+    host.innerHTML = html;
+    var pv = host.querySelector('#tp-prev'), nx = host.querySelector('#tp-next');
+    if (pv) pv.onclick = function () { state.page--; draw(); };
+    if (nx) nx.onclick = function () { state.page++; draw(); };
+  }
+  if (opt.searchable !== false) {
+    host.insertAdjacentHTML('beforebegin',
+      '<div class="p-2 px-3" style="border-bottom:1px solid var(--border)"><div class="position-relative" style="max-width:320px">' +
+      '<i class="bi bi-search position-absolute" style="left:12px;top:50%;transform:translateY(-50%);color:var(--text-2)"></i>' +
+      '<input class="form-control" style="padding-left:34px" placeholder="' + esc(opt.searchPlaceholder || 'Cari...') + '" id="ts-' + hostId + '"></div></div>');
+    var inp = host.previousElementSibling.querySelector('#ts-' + hostId);
+    inp.addEventListener('input', function () { state.q = inp.value; state.page = 1; draw(); });
+  }
+  draw();
+  return { refresh: function (rows2) { if (rows2) opt.rows = rows2; draw(); } };
+}
+
+/* Chart registry (hancurkan chart lama saat pindah halaman) */
+function destroyCharts() {
+  Object.keys(HRIS.charts).forEach(function (k) {
+    try { HRIS.charts[k].destroy(); } catch (e) {}
+    delete HRIS.charts[k];
+  });
+}
+function makeChart(id, cfg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (HRIS.charts[id]) { try { HRIS.charts[id].destroy(); } catch (e) {} }
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-2') || '#64748b';
+  HRIS.charts[id] = new Chart(el, cfg);
+}
+var PALETTE = ['#10b981', '#0f2a4a', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316'];
+
+/* ================= 3. KAMERA & GPS ================= */
+var Cam = {
+  stream: null,
+  /** Terjemahkan error getUserMedia menjadi pesan + langkah perbaikan yang jelas */
+  errMsg(e) {
+    var n = (e && e.name) || '';
+    if (window.isSecureContext === false) {
+      return 'Kamera & GPS butuh HTTPS. Buka aplikasi langsung dari URL Web App (https://script.google.com/macros/...).';
+    }
+    if (n === 'NotAllowedError' || n === 'PermissionDeniedError') {
+      return 'Izin kamera ditolak. Perbaiki berurutan: (1) Pengaturan HP > Aplikasi > Chrome > Izin > Kamera > Izinkan - ini penyebab tersering, izin situs saja tidak cukup. ' +
+        '(2) Ketuk ikon gembok di address bar > Izin > Kamera > Izinkan, lalu muat ulang halaman. ' +
+        '(3) Jika link dibuka dari WhatsApp/FB/IG, salin URL dan buka langsung di Chrome/Safari.';
+    }
+    if (n === 'NotReadableError' || n === 'TrackStartError') {
+      return 'Kamera sedang dipakai aplikasi lain (Kamera/Zoom/Meet/IG). Tutup aplikasi tersebut atau restart HP, lalu coba lagi.';
+    }
+    if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
+      return 'Tidak ada kamera yang terdeteksi di perangkat ini.';
+    }
+    if (n === 'SecurityError') {
+      return 'Akses kamera diblokir keamanan browser. Buka aplikasi langsung dari URL Web App HTTPS.';
+    }
+    if (e && e.message) return 'Kamera gagal diaktifkan: ' + e.message;
+    return 'Kamera gagal diaktifkan. Muat ulang halaman lalu coba lagi.';
+  },
+  async start(videoEl) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Browser tidak mendukung akses kamera (mediaDevices). Gunakan Chrome/Safari terbaru, dibuka langsung - bukan lewat in-app browser WhatsApp/FB/IG.');
+    }
+    this.stop();
+    // Cascade: kualitas terbaik -> tanpa resolusi -> apa pun yang ada
+    var tries = [
+      { video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 540 } }, audio: false },
+      { video: { facingMode: 'user' }, audio: false },
+      { video: true, audio: false }
+    ];
+    // Error non-constraint tidak perlu dicoba lagi dgn constraint lebih rendah
+    var fatal = { NotAllowedError: 1, PermissionDeniedError: 1, NotFoundError: 1, DevicesNotFoundError: 1, NotReadableError: 1, TrackStartError: 1, SecurityError: 1 };
+    var last = null;
+    for (var i = 0; i < tries.length; i++) {
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia(tries[i]);
+        videoEl.srcObject = this.stream;
+        await videoEl.play();
+        return;
+      } catch (e) {
+        last = e;
+        if (fatal[(e && e.name) || '']) break;
+      }
+    }
+    throw new Error(this.errMsg(last));
+  },
+  stop() {
+    if (this.stream) { this.stream.getTracks().forEach(function (t) { t.stop(); }); this.stream = null; }
+  },
+  capture(videoEl) {
+    if (!videoEl.videoWidth) throw new Error('Kamera belum siap. Tunggu beberapa saat lalu coba lagi.');
+    var maxW = 640, scale = Math.min(1, maxW / videoEl.videoWidth);
+    var c = document.createElement('canvas');
+    c.width = Math.round(videoEl.videoWidth * scale);
+    c.height = Math.round(videoEl.videoHeight * scale);
+    c.getContext('2d').drawImage(videoEl, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.82);
+  },
+  /** Fallback: foto via aplikasi kamera bawaan HP (input file capture) -> dataURL sama formatnya dgn capture() */
+  async fileToShot(file) {
+    var b64 = await new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(String(r.result)); };
+      r.onerror = function () { rej(new Error('Gagal membaca file foto.')); };
+      r.readAsDataURL(file);
+    });
+    var img = await new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { rej(new Error('File bukan gambar yang valid.')); };
+      im.src = b64;
+    });
+    var maxW = 640, scale = Math.min(1, maxW / (img.naturalWidth || img.width || 640));
+    var c = document.createElement('canvas');
+    c.width = Math.round((img.naturalWidth || 640) * scale);
+    c.height = Math.round((img.naturalHeight || 480) * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.82);
+  }
+};
+function getGeo() {
+  return new Promise(function (resolve, reject) {
+    if (!navigator.geolocation) return reject(new Error('Browser Anda tidak mendukung GPS (Geolocation API).'));
+    navigator.geolocation.getCurrentPosition(function (p) {
+      resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) });
+    }, function (err) {
+      var map = {
+        1: 'Izin lokasi DITOLAK. Buka pengaturan browser > Izin Lokasi > izinkan situs ini, lalu muat ulang halaman.',
+        2: 'Lokasi tidak tersedia. Pastikan GPS aktif dan Anda berada di area terbuka.',
+        3: 'Waktu pencarian lokasi habis (timeout). Coba lagi atau dekat jendela.'
+      };
+      reject(new Error(map[err.code] || 'Gagal mengambil lokasi GPS.'));
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  });
+}
+function osmEmbed(lat, lng) {
+  var d = 0.0015;
+  return 'https://www.openstreetmap.org/export/embed.html?bbox=' + (lng - d) + ',' + (lat - d) + ',' + (lng + d) + ',' + (lat + d) + '&layer=mapnik&marker=' + lat + ',' + lng;
+}
+function fileToBase64(file) {
+  return new Promise(function (resolve, reject) {
+    if (file.size > 5 * 1024 * 1024) return reject(new Error('Ukuran file maksimal 5 MB.'));
+    var r = new FileReader();
+    r.onload = function () { resolve({ base64: r.result, name: file.name, mime: file.type || 'application/octet-stream', size: file.size }); };
+    r.onerror = function () { reject(new Error('Gagal membaca file.')); };
+    r.readAsDataURL(file);
+  });
+}
+function downloadBase64(b64, filename, mime) {
+  var idx = b64.indexOf('base64,');
+  if (idx > -1) b64 = b64.substring(idx + 7);
+  var bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+  for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+  var blob = new Blob([bytes], { type: mime || 'application/octet-stream' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+
+/* ================= 4. MENU & ROUTER (SPA) ================= */
+
+/** Label tampilan per role */
+var ROLE_LABELS = { SUPERADMIN: 'Superadmin', MANAGER: 'Manager', HRD: 'HRD', KARYAWAN: 'Karyawan' };
+
+/** Cek permission dari konteks RBAC yang dikirim backend saat login */
+function hasPerm(mod, perm) {
+  var rb = (HRIS.ctx && HRIS.ctx.rbac) || {};
+  if (rb.is_superadmin) return true;
+  var list = (rb.modules || {})[mod] || [];
+  return list.indexOf(perm) > -1;
+}
+
+/** Daftar kandidat menu admin - masing-masing dengan syarat permission server-side */
+var ADMIN_MENU_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2', page: 'AdminDashboard', req: ['dashboard_management', 'view'] },
+  { id: 'employees', label: 'Data Karyawan', icon: 'bi-people', page: 'Employees', req: ['data_karyawan', 'view'] },
+  { id: 'attendance', label: 'Absensi', icon: 'bi-fingerprint', page: 'Attendance', tab: 'clock', reqAny: [['absensi', 'view'], ['absensi', 'create']] },
+  { id: 'leave', label: 'Leave Management', icon: 'bi-calendar2-check', page: 'Requests', tab: 'leave', reqAny: [['pengajuan_cuti', 'view'], ['pengajuan_cuti', 'approve']] },
+  { id: 'overtime', label: 'Overtime', icon: 'bi-alarm', page: 'Requests', tab: 'overtime', reqAny: [['pengajuan_lembur', 'view'], ['pengajuan_lembur', 'approve']] },
+  { id: 'requests', label: 'Requests', icon: 'bi-inbox', page: 'Requests', tab: 'all', reqAny: [['pengajuan_cuti', 'view'], ['pengajuan_lembur', 'view'], ['pengajuan_sakit', 'view'], ['pengajuan_lainnya', 'view']] },
+  { id: 'payroll', label: 'Payroll', icon: 'bi-cash-coin', page: 'Payroll', reqAny: [['payroll', 'view'], ['slip_gaji', 'view']] },
+  { id: 'reports', label: 'Reports', icon: 'bi-file-earmark-bar-graph', page: 'Reports', req: ['laporan', 'view'] },
+  { id: 'users', label: 'User & Role', icon: 'bi-person-gear', page: 'RoleManagement', req: ['user_management', 'view'] },
+  { id: 'authority', label: 'Authority Matrix', icon: 'bi-shield-lock', page: 'AuthorityMatrix', req: ['authority_matrix', 'manage'] },
+  { id: 'approval', label: 'Approval Workflow', icon: 'bi-diagram-3', page: 'ApprovalSettings', reqAny: [['approval_workflow', 'view'], ['approval_workflow', 'manage']] },
+  { id: 'notifmenu', label: 'Notifications', icon: 'bi-bell', page: 'NOTIF_PANEL' },
+  { id: 'settings', label: 'Settings', icon: 'bi-gear', page: 'Settings', reqAny: [['system_settings', 'view'], ['system_settings', 'manage']] }
+];
+
+/** Menu Employee Self-Service (Karyawan) */
+var EMPLOYEE_MENU_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2', page: 'EmployeeDashboard' },
+  { id: 'clock', label: 'Clock In/Out', icon: 'bi-fingerprint', page: 'Attendance', tab: 'clock' },
+  { id: 'myatt', label: 'My Attendance', icon: 'bi-calendar3', page: 'Attendance', tab: 'history' },
+  { id: 'leave', label: 'Leave Request', icon: 'bi-calendar2-check', page: 'Requests', tab: 'leave' },
+  { id: 'ot', label: 'Overtime Request', icon: 'bi-alarm', page: 'Requests', tab: 'overtime' },
+  { id: 'other', label: 'Other Requests', icon: 'bi-inbox', page: 'Requests', tab: 'other' },
+  { id: 'payslip', label: 'My Payslip', icon: 'bi-receipt', page: 'Payroll' },
+  { id: 'notifmenu', label: 'Notifications', icon: 'bi-bell', page: 'NOTIF_PANEL' },
+  { id: 'profile', label: 'My Profile', icon: 'bi-person-badge', page: 'EmployeeDashboard', tab: 'profile' }
+];
+
+/** Menu lama (fallback bila backend belum dikonfigurasi ulang) */
+var MENU = {
+  SUPERADMIN: ADMIN_MENU_ITEMS,
+  MANAGER: ADMIN_MENU_ITEMS,
+  HRD: ADMIN_MENU_ITEMS,
+  KARYAWAN: EMPLOYEE_MENU_ITEMS,
+  MANAGEMENT: ADMIN_MENU_ITEMS,
+  EMPLOYEE: EMPLOYEE_MENU_ITEMS
+};
+window.PAGES = window.PAGES || {};
+
+/**
+ * Bangun menu dinamis berbasis permission dari Authority Matrix.
+ * Sidebar menyesuaikan otomatis saat Superadmin mengubah permission
+ * (setelah user login ulang / refresh session).
+ */
+function buildMenu() {
+  var rb = (HRIS.ctx && HRIS.ctx.rbac) || null;
+  var role = (rb && rb.role) || (HRIS.ctx ? HRIS.ctx.role : '') || 'KARYAWAN';
+  if (role === 'KARYAWAN') return EMPLOYEE_MENU_ITEMS;
+  // Fallback aman: bila backend belum mengirim konteks RBAC (versi backend/frontend
+  // tidak sinkron), tampilkan menu penuh ala versi lama agar aplikasi tetap terpakai.
+  if (!rb) {
+    console.warn('ctx.rbac tidak ada - backend lama? Menu ditampilkan tanpa filter permission. Salin ulang seluruh file backend terbaru.');
+    return MENU[role] || ADMIN_MENU_ITEMS;
+  }
+  // Admin: filter kandidat menu berdasarkan permission
+  return ADMIN_MENU_ITEMS.filter(function (item) {
+    if (!item.req && !item.reqAny) return true; // selalu tampil (mis. notifikasi)
+    if (item.req) return hasPerm(item.req[0], item.req[1]);
+    return item.reqAny.some(function (r) { return hasPerm(r[0], r[1]); });
+  });
+}
+
+/** Eksekusi ulang <script> di dalam fragment yang di-inject via innerHTML */
+function activateScripts(container) {
+  container.querySelectorAll('script').forEach(function (old) {
+    var s = document.createElement('script');
+    s.textContent = old.textContent;
+    old.parentNode.replaceChild(s, old);
+  });
+}
+
+function findMenu(id) {
+  var list = HRIS.menu || MENU[(HRIS.ctx && HRIS.ctx.role) || 'KARYAWAN'] || [];
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  return list[0];
+}
+
+async function showPage(menuId, tab) {
+  var item = findMenu(menuId);
+  var view = document.getElementById('view');
+  destroyCharts();
+  Cam.stop();
+  closeNotifPanel();
+
+  if (item.page === 'NOTIF_PANEL') { toggleNotifPanel(); setActiveMenu(menuId); return; }
+
+  setActiveMenu(menuId);
+  document.getElementById('tb-title').textContent = item.label;
+  document.getElementById('tb-sub').textContent = HRIS.ctx.company.name;
+  view.innerHTML = '<div class="p-2">' +
+    '<div class="skeleton mb-3" style="width:40%;height:18px"></div>' +
+    '<div class="row g-3 mb-3"><div class="col-md-3"><div class="skeleton" style="height:84px"></div></div><div class="col-md-3"><div class="skeleton" style="height:84px"></div></div><div class="col-md-3"><div class="skeleton" style="height:84px"></div></div><div class="col-md-3"><div class="skeleton" style="height:84px"></div></div></div>' +
+    '<div class="skeleton mb-2"></div><div class="skeleton mb-2" style="width:80%"></div><div class="skeleton" style="width:60%"></div></div>';
+
+  try {
+    var fragName = item.page;
+    var cached = HRIS.fragCache[fragName];
+    var html = cached || (await api('getFragment', getToken(), fragName));
+    HRIS.fragCache[fragName] = html;
+    HRIS.route = { menu: menuId, page: fragName, tab: tab || item.tab || '' };
+    view.innerHTML = '<div class="page-fade">' + html + '</div>';
+    activateScripts(view);
+    if (typeof PAGES[fragName] === 'function') PAGES[fragName](view, HRIS.route);
+    else console.warn('Init halaman tidak ditemukan: ' + fragName);
+    window.scrollTo({ top: 0 });
+  } catch (e) {
+    var msg = String(e && e.message ? e.message : e);
+    var hint = '';
+    if (/ditolak|permission/i.test(msg)) hint = 'Jalankan seedRbacData() atau runDiagnostics() dari editor Apps Script untuk menanam permission default tiap role.';
+    else if (/tidak ditemukan|tidak dapat dibaca|tidak lengkap/i.test(msg)) hint = 'Ada file atau kode yang belum tersalin di project Apps Script. Jalankan runDiagnostics() dari editor untuk melihat daftar yang kurang.';
+    else if (/Sesi berakhir|token/i.test(msg)) hint = 'Silakan login ulang.';
+    else hint = 'Cek laporan error di menu Eksekusi editor Apps Script, lalu jalankan runDiagnostics() dari editor.';
+    view.innerHTML = emptyState('bi-wifi-off', 'Gagal memuat halaman', msg) +
+      '<div class="card-soft mx-3 mb-3" style="border-left:4px solid var(--blue)"><div class="card-body-soft" style="font-size:12.5px">' +
+      '<b><i class="bi bi-tools me-1"></i>Saran perbaikan</b><div style="color:var(--text-2);margin-top:4px">' + esc(hint) + '</div>' +
+      '<div style="color:var(--text-2);margin-top:6px">Setelah memperbaiki: Deploy &gt; Manage deployments &gt; \u270f New version &gt; Deploy, lalu muat ulang dengan Ctrl+Shift+R.</div></div></div>';
+    if (msg.indexOf('Sesi berakhir') > -1) { setTimeout(function () { doLogout(true); }, 1500); }
+  }
+}
+
+function setActiveMenu(menuId) {
+  document.querySelectorAll('.sidebar-link').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.menu === menuId);
+  });
+}
+
+/* ================= 5. SHELL (SIDEBAR + TOPBAR) ================= */
+function renderShell() {
+  var ctx = HRIS.ctx;
+  HRIS.menu = buildMenu(); // sidebar dinamis berbasis permission Authority Matrix
+  var menu = HRIS.menu;
+  var rb = ctx.rbac || {};
+  var roleLabel = rb.role_label || ROLE_LABELS[ctx.role] || ctx.role || 'Karyawan';
+  var isMgmt = (rb.role || ctx.role) !== 'KARYAWAN';
+  var initials = (ctx.name || ctx.username || '?').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+
+  var sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML =
+    '<div class="sidebar-brand"><div class="logo-badge"><i class="bi bi-person-badge"></i></div>' +
+    '<div><h6>' + esc(ctx.company.name) + '</h6><small>Smart HRIS &amp; Payroll</small></div></div>' +
+    '<nav class="sidebar-nav"><div class="sidebar-label">' + esc(roleLabel) + '</div>' +
+    menu.map(function (m) {
+      return '<button class="sidebar-link" data-menu="' + m.id + '"><i class="bi ' + m.icon + '"></i><span>' + esc(m.label) + '</span>' +
+        (m.id === 'notifmenu' ? '<span class="menu-badge d-none" id="menu-notif-badge">0</span>' : '') + '</button>';
+    }).join('') +
+    '</nav>' +
+    '<div class="sidebar-foot"><i class="bi bi-shield-lock"></i> v' + esc(ctx.prefs.version) + ' &bull; Role: ' + esc(roleLabel) +
+    '<br/>Jam kerja ' + esc(ctx.prefs.work_start) + '-' + esc(ctx.prefs.work_end) + ' &bull; Radius ' + ctx.prefs.radius + ' m</div>';
+  sidebar.querySelectorAll('.sidebar-link').forEach(function (b) {
+    b.onclick = function () {
+      closeSidebarMobile();
+      showPage(b.dataset.menu);
+    };
+  });
+
+  var logoHtml = ctx.company.logo_url
+    ? '<img src="' + esc(ctx.company.logo_url) + '" style="height:30px;border-radius:6px" onerror="this.style.display=\'none\'">'
+    : '';
+  document.getElementById('topbar').innerHTML =
+    '<button class="icon-btn" id="burger"><i class="bi bi-list"></i></button>' + logoHtml +
+    '<div class="flex-grow-1 min-w-0"><h5 class="topbar-title text-truncate" id="tb-title">Dashboard</h5>' +
+    '<div class="topbar-sub text-truncate" id="tb-sub">' + esc(ctx.company.name) + '</div></div>' +
+    '<span class="d-none d-md-inline" style="font-size:12px;color:var(--text-2)"><i class="bi bi-calendar3"></i> ' + HARI_ID[new Date().getDay()] + ', ' + dateID(new Date().toISOString().substring(0, 10)) + '</span>' +
+    '<button class="icon-btn" id="btn-theme" title="Mode gelap/terang"><i class="bi bi-moon-stars"></i></button>' +
+    '<button class="icon-btn" id="btn-notif" title="Notifikasi"><i class="bi bi-bell"></i><span class="dot d-none" id="notif-dot"></span></button>' +
+    '<div class="user-chip" id="user-chip"><div class="avatar ' + (isMgmt ? '' : 'em') + '">' + esc(initials) + '</div>' +
+    '<div class="d-none d-sm-block" style="line-height:1.15"><div style="font-weight:800;font-size:12.5px">' + esc(ctx.name) + '</div>' +
+    '<div style="font-size:10.5px;color:var(--text-2)">' + esc(roleLabel) + '</div></div>' +
+    '<i class="bi bi-chevron-down" style="font-size:11px;color:var(--text-2)"></i></div>';
+
+  document.getElementById('burger').onclick = function () {
+    sidebar.classList.add('open');
+    document.getElementById('sidebar-backdrop').classList.add('show');
+  };
+  document.getElementById('btn-theme').onclick = toggleTheme;
+  document.getElementById('btn-notif').onclick = toggleNotifPanel;
+  document.getElementById('user-chip').onclick = openUserMenu;
+
+  initThemeIcon();
+  refreshNotifBadge();
+  if (!HRIS.notifTimer) HRIS.notifTimer = setInterval(refreshNotifBadge, 60000);
+}
+
+function closeSidebarMobile() {
+  var sb = document.getElementById('sidebar');
+  if (sb) sb.classList.remove('open');
+  var bd = document.getElementById('sidebar-backdrop');
+  if (bd) bd.classList.remove('show');
+}
+
+function openUserMenu() {
+  var ctx = HRIS.ctx;
+  var m = openModal({
+    title: 'Akun Saya', size: 'sm',
+    body: '<div class="text-center mb-3"><div class="avatar em mx-auto" style="width:56px;height:56px;font-size:20px">' + esc(ctx.name[0]) + '</div>' +
+      '<h6 class="mt-2 mb-0 fw-bold">' + esc(ctx.name) + '</h6><small style="color:var(--text-2)">' + esc(ctx.email || ctx.username) + '</small></div>' +
+      '<div class="d-grid gap-2">' +
+      '<button class="btn btn-soft text-start" id="um-profile"><i class="bi bi-person me-2"></i>Profil Saya</button>' +
+      '<button class="btn btn-soft text-start" id="um-pass"><i class="bi bi-key me-2"></i>Ganti Password</button>' +
+      '<button class="btn btn-outline-danger text-start" id="um-logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>' +
+      '</div>'
+  });
+  m.el.querySelector('#um-profile').onclick = function () { m.close(); showPage((HRIS.ctx.rbac || HRIS.ctx).role === 'KARYAWAN' ? 'profile' : 'employees'); };
+  m.el.querySelector('#um-pass').onclick = function () { m.close(); openChangePassword(); };
+  m.el.querySelector('#um-logout').onclick = function () { m.close(); doLogout(); };
+}
+
+function openChangePassword() {
+  var m = openModal({
+    title: 'Ganti Password',
+    body: '<div class="mb-3"><label class="form-label">Password Lama</label><input type="password" class="form-control" id="cp-old"></div>' +
+      '<div class="mb-1"><label class="form-label">Password Baru (min. 8 karakter)</label><input type="password" class="form-control" id="cp-new"></div>' +
+      '<div class="mb-3"><label class="form-label">Ulangi Password Baru</label><input type="password" class="form-control" id="cp-new2"></div>',
+    footer: '<button class="btn btn-soft" id="cp-cancel">Batal</button><button class="btn btn-emerald" id="cp-save"><i class="bi bi-check-lg me-1"></i>Simpan</button>'
+  });
+  m.el.querySelector('#cp-cancel').onclick = m.close;
+  m.el.querySelector('#cp-save').onclick = async function () {
+    var o = m.el.querySelector('#cp-old').value, n1 = m.el.querySelector('#cp-new').value, n2 = m.el.querySelector('#cp-new2').value;
+    if (!o || !n1) return toast('Password lama & baru wajib diisi.', 'warn');
+    if (n1 !== n2) return toast('Konfirmasi password tidak sama.', 'warn');
+    if (n1.length < 8) return toast('Password baru minimal 8 karakter.', 'warn');
+    try {
+      var res = await gas('apiChangePassword', getToken(), o, n1);
+      m.close(); toast(res.message || 'Password berhasil diubah.');
+    } catch (e) { toast(e.message, 'error'); }
+  };
+}
+
+async function doLogout(expired) {
+  try { await gas('apiLogout', getToken()); } catch (e) {}
+  localStorage.removeItem('hris_token');
+  HRIS.ctx = null; HRIS.fragCache = {};
+  clearInterval(HRIS.notifTimer); HRIS.notifTimer = null;
+  destroyCharts(); Cam.stop();
+  showLogin();
+  if (!expired) toast('Anda telah logout.', '', 'Sampai jumpa');
+}
+
+/* ================= 6. NOTIFIKASI IN-APP ================= */
+async function refreshNotifBadge() {
+  try {
+    var d = await api('apiGetUnreadCount', getToken());
+    var dot = document.getElementById('notif-dot');
+    var mb = document.getElementById('menu-notif-badge');
+    if (dot) dot.classList.toggle('d-none', !d.unread);
+    if (mb) { mb.textContent = d.unread; mb.classList.toggle('d-none', !d.unread); }
+  } catch (e) { /* diamkan */ }
+}
+async function toggleNotifPanel() {
+  var p = document.getElementById('notif-panel');
+  if (!p) return;
+  if (p.classList.contains('open')) { closeNotifPanel(); return; }
+  p.classList.add('open');
+  p.innerHTML = '<div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--border)">' +
+    '<b><i class="bi bi-bell me-1"></i> Notifikasi</b><button class="btn btn-soft btn-sm-2" id="np-all">Tandai semua dibaca</button></div>' +
+    '<div id="np-list">' + '<div class="p-4 text-center" style="color:var(--text-2)"><div class="spinner-border spinner-border-sm"></div></div>' + '</div>';
+  p.querySelector('#np-all').onclick = async function () {
+    try { await gas('apiMarkAllNotificationsRead', getToken()); closeNotifPanel(); refreshNotifBadge(); toast('Semua notifikasi ditandai dibaca.'); } catch (e) { toast(e.message, 'error'); }
+  };
+  try {
+    var items = await api('apiGetMyNotifications', getToken());
+    var list = p.querySelector('#np-list');
+    list.innerHTML = items.length ? items.map(function (n) {
+      return '<div class="notif-item ' + (n.is_read ? '' : 'unread') + '" data-id="' + n.id + '">' +
+        '<i class="bi ' + (n.is_read ? 'bi-envelope-open text-muted' : 'bi-envelope-fill text-success') + ' mt-1"></i>' +
+        '<div><div style="font-weight:700;font-size:13px">' + esc(n.title) + '</div>' +
+        '<div style="font-size:12px;color:var(--text-2)">' + esc(n.message) + '</div>' +
+        '<div style="font-size:10.5px;color:var(--text-2);margin-top:3px"><i class="bi bi-clock"></i> ' + dtID(n.created_at) + '</div></div></div>';
+    }).join('') : emptyState('bi-bell-slash', 'Tidak ada notifikasi', 'Notifikasi akan muncul di sini.');
+    list.querySelectorAll('.notif-item').forEach(function (el) {
+      el.onclick = async function () {
+        try { await gas('apiMarkNotificationRead', getToken(), el.dataset.id); el.classList.remove('unread'); refreshNotifBadge(); } catch (e) {}
+      };
+    });
+  } catch (e) {
+    p.querySelector('#np-list').innerHTML = emptyState('bi-wifi-off', 'Gagal memuat', e.message);
+  }
+}
+function closeNotifPanel() {
+  var p = document.getElementById('notif-panel');
+  if (p) p.classList.remove('open');
+}
+
+/* ================= 7. TEMA (DARK/LIGHT) ================= */
+function initTheme() {
+  var t = localStorage.getItem('hris_theme');
+  if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+}
+function initThemeIcon() {
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var i = document.querySelector('#btn-theme i');
+  if (i) i.className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
+}
+function toggleTheme() {
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (dark) document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', 'dark');
+  localStorage.setItem('hris_theme', dark ? 'light' : 'dark');
+  initThemeIcon();
+}
+
+/* ================= 8. LOGIN & BOOT ================= */
+async function showLogin() {
+  document.body.classList.add('auth-mode');
+  destroyCharts();
+  var view = document.getElementById('view');
+  view.innerHTML = '<div class="p-2"><div class="skeleton mb-3 mx-auto" style="max-width:420px;height:300px"></div></div>';
+  try {
+    var html = HRIS.fragCache['Login'] || await api('getFragment', '', 'Login');
+    HRIS.fragCache['Login'] = html;
+    view.innerHTML = html;
+    activateScripts(view);
+    if (typeof PAGES['Login'] === 'function') PAGES['Login'](view);
+  } catch (e) {
+    view.innerHTML = '<div class="alert alert-danger m-3">Gagal memuat halaman login: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function boot() {
+  initTheme();
+  var token = getToken();
+  if (!token) { showLogin(); return; }
+  try {
+    var res = await gas('apiValidateSession', token);
+    HRIS.ctx = res.data;
+    document.body.classList.remove('auth-mode');
+    renderShell();
+    showPage('dashboard');
+  } catch (e) {
+    localStorage.removeItem('hris_token');
+    showLogin();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+
+</body>
+</html>
